@@ -1,0 +1,14 @@
+correr proyecto TesisUSB
+
+pyenv activate FBLS
+
+cd ~/TesisUSBMaster/FBLS-master/MultimodalEmotionFusionUnifyFBLS
+
+python run_all.py deep_fusion 0 2
+
+
+
+https://datascientest.com/es/comprende-el-algoritmo-t-sne-en-3-pasos#:~:text=T%2DSNE%20es%20una%20t%C3%A9cnica,y%20Laurens%20Van%20Der%20Maaten.
+https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
+https://en.wikipedia.org/wiki/Confusion_matrix
+
