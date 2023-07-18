@@ -1,7 +1,7 @@
 "Extracted from https://github.com/juan1t0/multimodalDLforER JuanPablo Heredia (juan1t0 github)"
 import torch
 import torch.nn as nn
-import numpy as np
+
 from Models.WeightedSum import WeightedSum
 
 "Based on the embracenet proposed by Jun-Ho Choi, Jong-Seok Lee (2019)"
@@ -51,8 +51,8 @@ class EmbraceNet(nn.Module):
 		if (selection_probabilities is None):
 			selection_probabilities = torch.ones(batch_size, len(input_list), dtype=torch.float, device=self.device)
 
-		selection_probabilities = torch.max(selection_probabilities, availabilities)
-		probability_sum = torch.max(selection_probabilities)#, dim=-1, keepdim=True)
+		selection_probabilities = torch.mul(selection_probabilities, availabilities)
+		probability_sum = torch.sum(selection_probabilities, dim=-1, keepdim=True)
 		selection_probabilities = torch.div(selection_probabilities, probability_sum)
 
 		# stack docking outputs
@@ -62,11 +62,10 @@ class EmbraceNet(nn.Module):
 		modality_indices = torch.multinomial(selection_probabilities, num_samples=self.embracement_size, replacement=True)  # [batch_size, embracement_size]
 		modality_toggles = nn.functional.one_hot(modality_indices, num_classes=num_modalities).float()  # [batch_size, embracement_size, num_modalities]
 
-		embracement_output_stack = torch.max(docking_output_stack, modality_toggles)
+		embracement_output_stack = torch.mul(docking_output_stack, modality_toggles)
 		embracement_output = torch.sum(embracement_output_stack, dim=-1)  # [batch_size, embracement_size]
 
 		return embracement_output
-
 
 class Wrapper(nn.Module):
 	def __init__(self, name, device, n_classes=6, size_list=[6,6,6],
