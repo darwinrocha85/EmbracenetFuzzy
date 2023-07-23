@@ -1,7 +1,7 @@
 
 import numpy as np
 import csv
-from Models.Embracenet import EmbracenetPlus, Wrapper
+from Models.Embracenet import Wrapper
 import torch
 import torch.nn as nn
 from torch.optim import Adam

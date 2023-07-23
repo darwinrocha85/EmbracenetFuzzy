@@ -1,7 +1,7 @@
 import torch
 from tqdm.notebook import tqdm
 
-from Models.Embracenet import EmbracenetPlus, Wrapper
+from Models.Embracenet import Wrapper
 from Utils.results_saving import save_results
 
 """ Trains DeepFusion.
@@ -68,6 +68,7 @@ def train_embracenet(model, learning_rate, train_dataloader, epochs, loss_functi
                 for batch in tqdm(validation_dataloader):
 
                     expected_value = torch.argmax(batch['label'], dim=-1)#.flatten()
+
                     batch.pop('label')
                     batch.pop('name')
 
@@ -141,9 +142,6 @@ def exec_model(model, dataloader, loss_function=None, loss_list=None, acc_list=N
     if loss_function is None and optimizer:
         raise Exception("Can't train model without a loss function")
 
-    if isinstance(model, DeepFusion) and loss_function is not None and loss_parameters is None:
-        raise Exception("Calculating the loss of the DeepFusion model requires that loss_parameters is not None")
-
     if optimizer is None:
         model.eval()
         is_train = False
@@ -163,23 +161,16 @@ def exec_model(model, dataloader, loss_function=None, loss_list=None, acc_list=N
                 clean_batch(batch)
 
             expected_value = torch.argmax(batch['label'], dim=-1)#.flatten()
-            input_list = [batch['face'], batch['audio'], batch['text']]
 
             if optimizer is not None:
                 optimizer.zero_grad()
 
-            if isinstance(model, DeepFusion):
-                output_value, output_weighted_module, output_crossmodality = model(input_list)
-                if loss_function is not None:
-                    loss = loss_function(output_value, expected_value) + loss_parameters["weighted_module"] * loss_function(output_weighted_module, expected_value) + loss_parameters["crossmodality"] * loss_function(output_crossmodality, expected_value)
-                    sum_loss += loss.item()
-            else:
-                if isinstance(model, Wrapper) or isinstance(model, EmbracenetPlus):
-                    batch.pop('label')
-                    batch.pop('name')
-                    output_value = model(**batch)
-                else:
-                    output_value = model(input_list)
+
+            if isinstance(model, Wrapper):
+                batch.pop('label')
+                batch.pop('name')
+
+                output_value = model(**batch)
 
                 if loss_function is not None:
                     loss = loss_function(output_value, expected_value)

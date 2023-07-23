@@ -1,8 +1,9 @@
 "Extracted from https://github.com/juan1t0/multimodalDLforER JuanPablo Heredia (juan1t0 github)"
 import torch
 import torch.nn as nn
+import numpy as np
+from sklearn.cluster import KMeans
 
-from Models.WeightedSum import WeightedSum
 
 "Based on the embracenet proposed by Jun-Ho Choi, Jong-Seok Lee (2019)"
 class EmbraceNet(nn.Module):
@@ -65,7 +66,9 @@ class EmbraceNet(nn.Module):
 		embracement_output_stack = torch.mul(docking_output_stack, modality_toggles)
 		embracement_output = torch.sum(embracement_output_stack, dim=-1)  # [batch_size, embracement_size]
 
+
 		return embracement_output
+
 
 class Wrapper(nn.Module):
 	def __init__(self, name, device, n_classes=6, size_list=[6,6,6],
@@ -85,48 +88,66 @@ class Wrapper(nn.Module):
 									nn.Softmax(dim=-1))
 
 	def forward(self, face, audio, text, availabilities):
-		out = self.Embrace([face, audio, text], availabilities=availabilities)
+
+		facew, audiow, textw = self.calculated_distances(face, audio, text)
+		out = self.Embrace([facew, audiow, textw], availabilities=availabilities)
 		if self.classifier:
 			out = self.clf(out)
 		return out
 
-class EmbracenetPlus(nn.Module):
+	def calculated_distances(self, face, audio, text):
 
-	def __init__(self, name, device, additional_layer_size, n_classes=6, size_list=[6,6,6],
-				embracesize=100, bypass_docking=False) -> None:
-		super().__init__()
+		face_tensores = self.calculated_tensor(face)
+		audio_tensores = self.calculated_tensor(audio)
+		text_tensores = self.calculated_tensor(text)
 
-		super(EmbracenetPlus, self).__init__()
-		self.name = name
-		self.embracenet_modalities = EmbraceNet(
-			device=device,
-			input_size_list=size_list,
-			embracement_size=embracesize,
-			additional_layer_size=additional_layer_size
-		)
-		self.weighted_sum = WeightedSum(
-			device=device,
-			name="weighted_sum",
-			number_of_modes=len(size_list)
-		)
-		self.embracenet_methods = Wrapper(
-			name=f"{name}_classifier",
-			device=device,
-			n_classes=n_classes,
-			size_list=[embracesize,size_list[0],sum(size_list)],
-			embracesize=embracesize
-		)
+		return face_tensores, audio_tensores, text_tensores
 
-		self.methods_availabilites = torch.tensor([1., 1., 1.])
 
-	def forward(self, face, audio, text, availabilities):
+	def calculated_tensor(self, tensor):
 
-		input_list = [face, audio, text]
+		option = 1
 
-		embracenet_results = self.embracenet_modalities(input_list, availabilities=availabilities)
-		weighted_sum_results = self.weighted_sum(input_list)
-		concat_modalities = torch.cat(input_list, dim=1)
+		distances_ = []
+		# Especifica la cantidad de centroides que deseas encontrar (N)
+		num_centroids = 4
+		if tensor.shape[0] < 4:
 
-		results = self.embracenet_methods(embracenet_results, weighted_sum_results, concat_modalities, availabilities=self.methods_availabilites)
+			distances_ = torch.stack([torch.tensor(_item) for _item in tensor])
 
-		return results
+		else:
+			# Crea una instancia del algoritmo k-means
+			kmeans = KMeans(n_clusters=num_centroids, n_init=10)
+
+			# Ajusta el algoritmo a tus datos
+			kmeans.fit(tensor)
+
+			# Obtiene los centroides encontrados
+			centroids = kmeans.cluster_centers_
+
+			# Calcula la distancia euclidiana entre los centroides y los datos
+			for _item in tensor:
+				distances_.append(torch.tensor(np.linalg.norm(_item - centroids, axis=1)))
+
+
+		_tensores = None
+		if option == 0:
+			for item_tensor in distances_:
+				if _tensores is None:
+					_tensores = torch.stack((item_tensor,))
+				else:
+					_tensores = torch.cat((_tensores, torch.stack((item_tensor,))))
+		elif option == 1:
+			mu = 0.7
+			sigma = 0.2
+
+			tensores_list = [torch.exp(-0.5 * ((d - mu) / sigma) ** 2) for d in distances_]
+
+			for item_tensor in tensores_list:
+				if _tensores is None:
+					_tensores = torch.stack((item_tensor,))
+				else:
+					_tensores = torch.cat((_tensores, torch.stack((item_tensor,))))
+
+
+		return _tensores.to(torch.float32)
