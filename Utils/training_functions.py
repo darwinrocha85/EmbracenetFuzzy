@@ -1,5 +1,5 @@
 import torch
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 from Models.Embracenet import Wrapper
 from Utils.results_saving import save_results
@@ -34,6 +34,8 @@ def train_embracenet(model, learning_rate, train_dataloader, epochs, loss_functi
         train_sum_loss = 0
         train_correct = 0
         train_total = 0
+
+
 
         for batch in tqdm(train_dataloader):
 
