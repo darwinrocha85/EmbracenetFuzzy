@@ -33,16 +33,16 @@ def save_results(model_name, prefix, train_loss, train_acc, val_loss, val_acc):
         results_acc = zip([i for i in range(1, epochs + 1)], train_acc)
 
 
-    with open(join('Results', prefix, 'Training Data', f'model_{model_name}_loss.csv'), 'w') as loss_file:
+    with open(join('Results', prefix, 'Training Data', f'model_{model_name}_loss.csv'), 'a') as loss_file:
 
         writer = csv.writer(loss_file, delimiter=",")
-        writer.writerow(header)
+        #writer.writerow(header)
         writer.writerows(results_loss)
 
-    with open(join('Results', prefix, 'Training Data', f'model_{model_name}_acc.csv'), 'w') as acc_file:
+    with open(join('Results', prefix, 'Training Data', f'model_{model_name}_acc.csv'), 'a') as acc_file:
 
         writer = csv.writer(acc_file, delimiter=",")
-        writer.writerow(header)
+        #writer.writerow(header)
         writer.writerows(results_acc)
 
 def save_results_basic(model_name, results_path, train_loss=None, train_acc=None, test_loss=None, test_acc=None):

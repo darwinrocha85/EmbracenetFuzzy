@@ -45,31 +45,32 @@ test_dataset = DatasetIEMOCAP(classes, face_data, audi_data,
                               text_data, 'average', mode = 'test',
                               transform=FusionTransformer(''))
 
-train_dataloader = DataLoader(train_dataset,
-                              batch_size=BatchSize, collate_fn=my_collate)
-test_dataloader = DataLoader(test_dataset,
-                             batch_size=BatchSize, collate_fn=my_collate)
+for i in range(1,101):
+    train_dataloader = DataLoader(train_dataset,
+                                batch_size=BatchSize, collate_fn=my_collate)
+    test_dataloader = DataLoader(test_dataset,
+                                batch_size=BatchSize, collate_fn=my_collate)
 
-device = torch.device('cpu')
-loss_function = nn.CrossEntropyLoss()
-model = Wrapper(
-        name="",
-        device=device,
-        n_classes=4,
-        size_list=[4,4,4],
-        embracesize=16
-    )
+    device = torch.device('cpu')
+    loss_function = nn.CrossEntropyLoss()
+    model = Wrapper(
+            name="",
+            device=device,
+            n_classes=4,
+            size_list=[4,4,4],
+            embracesize=16
+        )
 
-optimizer = Adam(model.parameters())#SGD(model.parameters(), lr=learning_rate)
+    optimizer = Adam(model.parameters())#SGD(model.parameters(), lr=learning_rate)
 
-train_embracenet(model, learning_rate, train_dataloader, 500, loss_function, optimizer, "", test_dataloader)
+    train_embracenet(model, learning_rate, train_dataloader, 10, loss_function, optimizer, "", test_dataloader)
 
-if learning_rate != 0:
-    base_name = f'model_{"model_name"}_lr_{str(learning_rate).replace(".", "")}'
-else:
-    base_name = f'model_{"model_name"}_adam'
+    if learning_rate != 0:
+        base_name = f'model_{"model_name"}_lr_{str(learning_rate).replace(".", "")}'
+    else:
+        base_name = f'model_{"model_name"}_adam'
 
-results_path = join('Results', "method")
-torch.save(model.state_dict(), join('Saved Models', f'{base_name}.pth'))
-os.system(f'Rscript plots.R {results_path} {base_name}')
-os.system(f'rm Rplots.pdf')
+    results_path = join('Results', "method")
+    torch.save(model.state_dict(), join('SavedModels', f'{base_name}.pth'))
+    os.system(f'Rscript plots.R {results_path} {base_name}')
+    os.system(f'rm Rplots.pdf')

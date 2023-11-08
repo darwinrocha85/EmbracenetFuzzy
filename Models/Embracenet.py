@@ -2,7 +2,8 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from sklearn.cluster import KMeans
+import skfuzzy as fuzz
+
 
 
 "Based on the embracenet proposed by Jun-Ho Choi, Jong-Seok Lee (2019)"
@@ -27,6 +28,8 @@ class EmbraceNet(nn.Module):
 					setattr(self, 'docking_%d' % (i), nn.Linear(input_size, embracement_size))
 
 	def forward(self, input_list, availabilities=None, selection_probabilities=None):
+
+		activationTriangularFuzzy = GaussianFuzzyActivation()
 		# check input data
 		assert len(input_list) == len(self.input_size_list)
 		num_modalities = len(input_list)
@@ -39,7 +42,9 @@ class EmbraceNet(nn.Module):
 		else:
 			for i, input_data in enumerate(input_list):
 				x = getattr(self, 'docking_%d' % (i))(input_data)
-				x = nn.functional.relu(x)
+				#x = nn.functional.relu(x)
+				x = activationTriangularFuzzy(x)
+
 				docking_output_list.append(x)
 
 		# check availabilities
@@ -89,65 +94,18 @@ class Wrapper(nn.Module):
 
 	def forward(self, face, audio, text, availabilities):
 
-		facew, audiow, textw = self.calculated_distances(face, audio, text)
-		out = self.Embrace([facew, audiow, textw], availabilities=availabilities)
+		out = self.Embrace([face, audio, text], availabilities=availabilities)
 		if self.classifier:
 			out = self.clf(out)
 		return out
 
-	def calculated_distances(self, face, audio, text):
+class GaussianFuzzyActivation(nn.Module):
+    def __init__(self):
+        super(GaussianFuzzyActivation, self).__init__()
+        self.mu = torch.tensor(0.0)
+        self.sigma = torch.tensor(1.0)
 
-		face_tensores = self.calculated_tensor(face)
-		audio_tensores = self.calculated_tensor(audio)
-		text_tensores = self.calculated_tensor(text)
-
-		return face_tensores, audio_tensores, text_tensores
-
-
-	def calculated_tensor(self, tensor):
-
-		option = 1
-
-		distances_ = []
-		# Especifica la cantidad de centroides que deseas encontrar (N)
-		num_centroids = 4
-		if tensor.shape[0] < 4:
-
-			distances_ = torch.stack([torch.tensor(_item) for _item in tensor])
-
-		else:
-			# Crea una instancia del algoritmo k-means
-			kmeans = KMeans(n_clusters=num_centroids, n_init=10)
-
-			# Ajusta el algoritmo a tus datos
-			kmeans.fit(tensor)
-
-			# Obtiene los centroides encontrados
-			centroids = kmeans.cluster_centers_
-
-			# Calcula la distancia euclidiana entre los centroides y los datos
-			for _item in tensor:
-				distances_.append(torch.tensor(np.linalg.norm(_item - centroids, axis=1)))
-
-
-		_tensores = None
-		if option == 0:
-			for item_tensor in distances_:
-				if _tensores is None:
-					_tensores = torch.stack((item_tensor,))
-				else:
-					_tensores = torch.cat((_tensores, torch.stack((item_tensor,))))
-		elif option == 1:
-			mu = 0.7
-			sigma = 0.2
-
-			tensores_list = [torch.exp(-0.5 * ((d - mu) / sigma) ** 2) for d in distances_]
-
-			for item_tensor in tensores_list:
-				if _tensores is None:
-					_tensores = torch.stack((item_tensor,))
-				else:
-					_tensores = torch.cat((_tensores, torch.stack((item_tensor,))))
-
-
-		return _tensores.to(torch.float32)
+    def forward(self, x):
+        # Calcula la función de activación gaussiana difusa
+        fuzzy_activation = torch.exp(-0.5 * ((x - self.mu) / self.sigma) ** 2)
+        return fuzzy_activation

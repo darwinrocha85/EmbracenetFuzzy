@@ -56,7 +56,7 @@ def train_embracenet(model, learning_rate, train_dataloader, epochs, loss_functi
         epoch_loss = train_sum_loss / train_total
         epoch_acc = train_correct / train_total
         train_loss.append(epoch_loss)
-        train_acc.append(epoch_acc)
+        train_acc.append(round(epoch_acc,5))
 
         if validation_dataloader is not None:
 
@@ -84,7 +84,7 @@ def train_embracenet(model, learning_rate, train_dataloader, epochs, loss_functi
             epoch_loss = val_sum_loss / val_total
             epoch_acc = val_correct / val_total
             val_loss.append(epoch_loss)
-            val_acc.append(epoch_acc)
+            val_acc.append(round(epoch_acc,5))
 
             print(f'epoch: {current_epoch}, train loss: {train_loss[-1]}, train acc: {train_acc[-1]}, val loss: {val_loss[-1]}, val acc: {val_acc[-1]}')
 

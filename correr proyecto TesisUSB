@@ -1,37 +1,25 @@
-correr proyecto TesisUSB
+si tienes opcion de entornot virtual
 
-pyenv activate FBLS
-
-cd ~/TesisUSBMaster/FBLS-master/MultimodalEmotionFusionUnifyFBLS
-
-python run_all.py deep_fusion 0 2
+ 	pyenv virtualenv 3.10.0 tesis_usb
+	pyenv activate tesis_usb
 
 
-cd USB_TESIS/EmbracenetFuzzy/
-python EmbracenetFuzzy.py
+install librerias
+
+	pip install torch
+	pip install numpy
+	pip install matplotlib
+	pip install scikit-fuzzy
+	pip install pandas
+	pip install sklearn
+	pip install tqdm
+	pip install fuzzytorch
 
 
-https://datascientest.com/es/comprende-el-algoritmo-t-sne-en-3-pasos#:~:text=T%2DSNE%20es%20una%20t%C3%A9cnica,y%20Laurens%20Van%20Der%20Maaten.
-https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
-https://en.wikipedia.org/wiki/Confusion_matrix
+ingesamos al directorio (caso FBLS)
 
-https://github.com/Tim55667757/FuzzyClassificator
+	cd EmbracenetFuzzy (cd ~/USB_TESIS/EmbracenetFuzzy/)
 
-https://github.com/topics/fuzzy-neural-network
+run project
 
-https://github.com/GhTara/Convolutional-Fuzzy-Neural-Network/blob/master/fuzzy_neural_network.ipynb
-
-https://github.com/kenoma/KerasFuzzy
-
-https://sci-hub.wf/10.1145/3369798
-
-
-Hay varias funciones que se pueden utilizar para calcular grados de permanencia, además de fuzz.trapmf(). Algunas de estas funciones incluyen:
-
-fuzz.gaussmf(): Esta función crea una función de membresía gaussiana, que es una función que tiene forma de campana.
-fuzz.sigmf(): Esta función crea una función de membresía sigmoidea, que es una función que tiene forma de S.
-fuzz.trimf(): Esta función crea una función de membresía triangular, que es una función que tiene tres puntos de inflexión.
-fuzz.pimf(): Esta función crea una función de membresía piramidal, que es una función que tiene cuatro puntos de inflexión.
-La función que se utiliza para calcular grados de permanencia depende de la aplicación específica. Por ejemplo, si se desea representar un conjunto borroso que es simétrico y tiene una forma de campana, entonces se puede utilizar la función fuzz.gaussmf(). Si se desea representar un conjunto borroso que tiene una forma de S, entonces se puede utilizar la función fuzz.sigmf(). Si se desea representar un conjunto borroso que tiene tres puntos de inflexión, entonces se puede utilizar la función fuzz.trimf(). Si se desea representar un conjunto borroso que tiene cuatro puntos de inflexión, entonces se puede utilizar la función fuzz.pimf().
-
-Es importante tener en cuenta que no hay una función única que sea la mejor para todas las aplicaciones. La mejor función para una aplicación específica depende de las características específicas del conjunto borroso que se desea representar.
+	python EmbracenetFuzzy.py
